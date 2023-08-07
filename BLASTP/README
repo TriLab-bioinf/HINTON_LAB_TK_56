@@ -1,0 +1,16 @@
+ 5361  blastp -db LF82.aa.fasta -query MG1655.aa.fasta -evalue 1e-20 -out MG1655_vs_LF82.bp -outfmt 7
+ 5362  l
+ 5363  head LF82_vs_MG1655.bp
+ 5364  grep -v '^#' LF82_vs_MG1655.bp|head
+ 5365  grep -v '^#' LF82_vs_MG1655.bp|head|cut -f 1,2
+ 5366  grep -v '^#' LF82_vs_MG1655.bp|head|cut -f 1,2|perl -lane 'print "$F[1]\t$F[0]"'
+ 5367  grep -v '^#' LF82_vs_MG1655.bp|head|cut -f 1,2|perl -lane 'print "$F[1]_$F[0]"'
+ 5368  grep -v '^#' LF82_vs_MG1655.bp|cut -f 1,2|perl -lane 'print "$F[1]_$F[0]"' > LF82_vs_MG1655.brm
+ 5369  grep -v '^#' MG1655_vs_LF82.bp |cut -f 1,2|perl -lane 'print "$F[0]_$F[1]"' > MG1655_vs_LF82.brm
+ 5370  grep -w -f LF82_vs_MG1655.brm MG1655_vs_LF82.brm
+ 5371  grep -w -f LF82_vs_MG1655.brm MG1655_vs_LF82.brm > tmp
+ 5372  wc -l tmp
+ 5373  wc -l LF82_vs_MG1655.brm
+ 5374  wc -l MG1655_vs_LF82.brm
+ 5375  l
+ 5376  head LF82_vs_MG1655.bp
