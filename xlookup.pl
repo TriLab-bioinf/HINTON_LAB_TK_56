@@ -1,1 +1,0 @@
-./BLASTP/xlookup.pl
