@@ -1,0 +1,117 @@
+---
+title: "Generate plots for DE analysis (TK_56)"
+author: "Hernan Lorenzi"
+date: "June 9th, 2023"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(ggpubr)
+library(cowplot)
+```
+
+### Load data
+
+```{r}
+data_raw = read_csv(file = "./LF82_MG1655_gene expressing_comp.csv", col_names = TRUE)
+
+# Calculate MG Log2FC from normalized expression means
+data <- data_raw %>% mutate(MG_Log2FC=log(MG_D445V_mean/MG_WT_mean,base = 2), .after = MG_FC)
+```
+
+[1] "MG_gene"        "MG_FDR"         "MG_FC"         
+ [4] "MG_D445V_1"     "MG_D445V_2"     "MG_D445V_3"    
+ [7] "MG_D445V_mean"  "MG_WT_1"        "MG_WT_2"       
+[10] "MG_WT_3"        "MG_WT_mean"     "MG_Description"
+[13] "LF82 Locus_tag" "LF82_baseMean"  "LF82_Log2FC"  
+[16] "LF82_lfcse"     "LF82_pvalue"    "LF82_FDR" 
+
+```{r}
+# Filter data by FC (MG) or Log2FC (LF82)
+data_mgup_lfdw <- filter(data, MG_Log2FC >= 1 & LF82_Log2FC <= -1 & (MG_FDR <= 0.05 | LF82_FDR < 0.05))
+data_mgdw_lfup <- filter(data, MG_Log2FC <= -1 & LF82_Log2FC >= 1 & (MG_FDR <= 0.05 | LF82_FDR < 0.05))
+```
+
+```{r}
+# parse data for plotting
+mgup_lfdw <- tibble(Log2FC=c(data_mgup_lfdw$MG_Log2FC, data_mgup_lfdw$LF82_Log2FC), Gene=c(data_mgup_lfdw$MG_gene, data_mgup_lfdw$MG_gene),Genome=c(rep("MG1655", nrow(data_mgup_lfdw)), rep("LF82", nrow(data_mgup_lfdw))))
+
+mgdw_lfup <- tibble(Log2FC=c(data_mgdw_lfup$MG_Log2FC, data_mgdw_lfup$LF82_Log2FC), Gene=c(data_mgdw_lfup$MG_gene, data_mgdw_lfup$MG_gene),Genome=c(rep("MG1655", nrow(data_mgdw_lfup)), rep("LF82", nrow(data_mgdw_lfup))))
+
+```
+
+
+```{r}
+
+dir.create(path = "./Plots", showWarnings = FALSE)
+# Plot table
+  my_min = round(min(mgup_lfdw$Log2FC), digits = 0) - 1
+  my_max = round(max(mgup_lfdw$Log2FC), digits = 0) + 1
+  p <- mgup_lfdw %>% ggplot(aes(x = Gene, y = Genome, fill = Log2FC), colour = "white") + 
+    theme_pubclean() + 
+    geom_tile( ) +
+    scale_fill_continuous(type = "viridis",
+                          limits = c(my_min, my_max),
+                          breaks = c(my_min,0,my_max)) + 
+    guides(fill = guide_colourbar(ticks = FALSE,
+                                  title.position = "left",
+                                  label.position = "bottom")
+                                  ) +
+    coord_fixed() + 
+    theme(axis.ticks = element_blank(),
+          panel.grid.minor.x = element_blank(),
+          panel.grid.minor.y = element_blank(),
+          panel.grid.major.x = element_blank(),
+          panel.grid.major.y = element_blank(),
+          axis.text.x = element_text(angle = 90, 
+                                     hjust = 1, 
+                                     vjust = 0.5),
+          plot.title = element_text(hjust = 0.5),
+          plot.subtitle = element_text(hjust = 0.5, size = 8)
+          ) + 
+    xlab("Differentially expressed genes") + 
+    ylab("Strains") + 
+    labs(title = "Log2FC of genes differentially expressed across strains", subtitle = "( | Log2FC | >=1 and adj.p < 0.05 )") 
+
+    ggsave2(filename = "./Plots/mgup_lfdw.pdf", plot = p, width = 7, height = 4)
+    print(p)
+```
+
+
+```{r}
+
+dir.create(path = "./Plots", showWarnings = FALSE)
+# Plot table
+  my_min = round(min(mgdw_lfup$Log2FC), digits = 0) - 1
+  my_max = round(max(mgdw_lfup$Log2FC), digits = 0) + 1
+  p2 <- mgdw_lfup %>% ggplot(aes(x = Gene, y = Genome, fill = Log2FC), colour = "white") + 
+    theme_pubclean() + 
+    geom_tile( ) +
+    scale_fill_continuous(type = "viridis",
+                          limits = c(my_min, my_max),
+                          breaks = c(my_min,0,my_max)) + 
+    guides(fill = guide_colourbar(ticks = FALSE,
+                                  title.position = "left",
+                                  label.position = "bottom")
+                                  ) +
+    coord_fixed() + 
+    theme(axis.ticks = element_blank(),
+          panel.grid.minor.x = element_blank(),
+          panel.grid.minor.y = element_blank(),
+          panel.grid.major.x = element_blank(),
+          panel.grid.major.y = element_blank(),
+          axis.text.x = element_text(angle = 90, 
+                                     hjust = 1, 
+                                     vjust = 0.5),
+          plot.title = element_text(hjust = 0.5),
+          plot.subtitle = element_text(hjust = 0.5, size = 8)
+          ) + 
+    xlab("Differentially expressed genes") + 
+    ylab("Strains") + 
+    labs(title = "Log2FC of genes differentially expressed across strains", subtitle = "( | Log2FC | >=1 and adj.p < 0.05 )") 
+
+
+    ggsave2(filename = "./Plots/mgdw_lfup.pdf", plot = p2, width = 7, height = 4)
+    print(p2)
+```
